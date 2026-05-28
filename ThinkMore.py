@@ -45,7 +45,7 @@ st.markdown("""
 
 # 🔑 جلب المفتاح السري بأمان من إعدادات السيرفر السحابي دون كشفه في الكود
 try:
-    API_KEY = st.secrets["GEMINI_KEY"]
+    API_KEY = st.secrets["GEMINI_KEY = "AIzaSyRB708""]
 except:
     API_KEY = None
 
