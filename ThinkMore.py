@@ -6,7 +6,7 @@ st.set_page_config(page_title="فكر أكثر | thinkMore", layout="centered")
 
 # دمج الأسرار (المفتاح)
 try:
-    API_KEY = st.secrets["GEMINI_KEY"]
+    API_KEY = st.secrets["GEMINI_KEY = "AIzaSyRB708...""]
 except:
     st.error("خطأ: لم يتم العثور على المفتاح السري GEMINI_KEY في إعدادات التطبيق.")
     st.stop()
