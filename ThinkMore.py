@@ -2,64 +2,43 @@ import streamlit as st
 import google.generativeai as genai
 import json
 
-# إعدادات الصفحة
-st.set_page_config(page_title="فكر أكثر | thinkMore - ذكاء اصطناعي", page_icon="🧠", layout="centered")
+st.set_page_config(page_title="فكر أكثر | thinkMore", layout="centered")
 
-# الحقن الشامل للـ RTL
-st.markdown("""
-    <style>
-    [data-testid="stAppViewContainer"], .stApp, html, body {
-        direction: RTL !important;
-        text-align: right !important;
-    }
-    .centered-content {
-        text-align: center !important;
-        direction: RTL !important;
-        display: block;
-        width: 100%;
-    }
-    div.stButton > button {
-        width: 100%;
-        direction: RTL !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# دمج الأسرار (المفتاح)
+try:
+    API_KEY = st.secrets["GEMINI_KEY"]
+except:
+    st.error("خطأ: لم يتم العثور على المفتاح السري GEMINI_KEY في إعدادات التطبيق.")
+    st.stop()
 
-# 🔑 السطر الذي يبحث عن المفتاح في إعدادات السيرفر (Secrets)
-API_KEY = st.secrets["GEMINI_KEY"]
-
-# دالة توليد الأفكار
-def generate_nebula_idea(api_key):
+def generate_idea(api_key):
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = """
-        أنت باحث متخصص في تفكيك "نهج البلاغة". اختر حكمة عشوائية وقم بصياغة المخرجات بصيغة JSON حصراً:
-        {
-          "category": "تصنيف الفكرة",
-          "title": "عنوان جذاب",
-          "content": "النص الشريف",
-          "deep_dive_markdown": "### ورقة بحثية... (محتوى الماركداون)"
-        }
-        """
+        prompt = "أنت خبير في نهج البلاغة. أخرج حكمة واحدة عشوائية بصيغة JSON فقط: {'category': '...', 'title': '...', 'content': '...', 'deep_dive_markdown': '...'}"
         response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
         return json.loads(response.text)
     except Exception as e:
+        st.error(f"خطأ في الاتصال بالذكاء الاصطناعي: {e}")
         return None
 
-# --- واجهة التطبيق ---
-st.markdown("<div class='centered-content'><h1>🧠 فكر أكثر | thinkMore AI</h1></div>", unsafe_allow_html=True)
+# الواجهة
+st.markdown("<h1 style='text-align: center;'>🧠 فكر أكثر | thinkMore</h1>", unsafe_allow_html=True)
 
-if 'ai_idea' not in st.session_state:
-    st.session_state.ai_idea = generate_nebula_idea(API_KEY)
+# زر التوليد
+if st.button("اضغط هنا لتوليد حكمة جديدة"):
+    with st.spinner("جاري جلب الفكرة..."):
+        data = generate_idea(API_KEY)
+        if data:
+            st.session_state.data = data
+            st.rerun()
+        else:
+            st.warning("لم يتم جلب أي بيانات، حاول مرة أخرى.")
 
-idea = st.session_state.ai_idea
-
-if idea:
-    with st.container(border=True):
-        st.markdown(f"### 📜 {idea.get('title')}")
-        st.markdown(f"<p>{idea.get('content')}</p>", unsafe_allow_html=True)
-
-    if st.button("🔄 توليد حكمة جديدة"):
-        st.session_state.ai_idea = generate_nebula_idea(API_KEY)
-        st.rerun()
+# عرض البيانات إذا كانت موجودة
+if 'data' in st.session_state:
+    d = st.session_state.data
+    st.subheader(d.get('title', ''))
+    st.info(d.get('content', ''))
+    with st.expander("قراءة التحليل المعمق"):
+        st.markdown(d.get('deep_dive_markdown', ''))
